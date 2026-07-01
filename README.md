@@ -7,6 +7,7 @@ sdk: streamlit
 sdk_version: "1.58.0"
 app_file: app.py
 pinned: false
+python_version: "3.10"
 ---
 
 # SeñaSalud – Comunicación en Lenguaje de Señas para Consultas Médicas
