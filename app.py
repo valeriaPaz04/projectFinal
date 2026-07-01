@@ -9,26 +9,34 @@ import numpy as np
 import streamlit as st
 from streamlit_webrtc import RTCConfiguration, VideoProcessorBase, WebRtcMode, webrtc_streamer
 
-# Servidor TURN público (necesario para que WebRTC conecte cuando la app corre
-# en un contenedor remoto como Hugging Face Spaces; solo STUN no basta detrás de NAT).
+# Servidor TURN (necesario para que WebRTC conecte cuando la app corre en un
+# contenedor remoto como Hugging Face Spaces; solo STUN no basta detrás de NAT).
+TURN_USERNAME = "24883f4497e429955a594f3f"
+TURN_CREDENTIAL = "Gqr7htHiCx/iihYo"
+
 RTC_CONFIGURATION = RTCConfiguration(
     {
         "iceServers": [
-            {"urls": ["stun:stun.l.google.com:19302"]},
+            {"urls": "stun:stun.relay.metered.ca:80"},
             {
-                "urls": ["turn:openrelay.metered.ca:80"],
-                "username": "openrelayproject",
-                "credential": "openrelayproject",
+                "urls": "turn:global.relay.metered.ca:80",
+                "username": TURN_USERNAME,
+                "credential": TURN_CREDENTIAL,
             },
             {
-                "urls": ["turn:openrelay.metered.ca:443"],
-                "username": "openrelayproject",
-                "credential": "openrelayproject",
+                "urls": "turn:global.relay.metered.ca:80?transport=tcp",
+                "username": TURN_USERNAME,
+                "credential": TURN_CREDENTIAL,
             },
             {
-                "urls": ["turn:openrelay.metered.ca:443?transport=tcp"],
-                "username": "openrelayproject",
-                "credential": "openrelayproject",
+                "urls": "turn:global.relay.metered.ca:443",
+                "username": TURN_USERNAME,
+                "credential": TURN_CREDENTIAL,
+            },
+            {
+                "urls": "turns:global.relay.metered.ca:443?transport=tcp",
+                "username": TURN_USERNAME,
+                "credential": TURN_CREDENTIAL,
             },
         ]
     }
