@@ -1,0 +1,5 @@
+venv/
+fotos_gestos/
+.ipynb_checkpoints/
+__pycache__/
+*.pyc

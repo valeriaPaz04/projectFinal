@@ -2,19 +2,19 @@
 INFORMACIÓN DEL MODELO DE GESTOS
 ==================================================
 
-📅 Fecha creación: 2026-06-17 21:28:25
-🏆 Mejor modelo: SVM_RBF
-⚙️  Mejores parámetros: {'clf__C': 1, 'clf__gamma': 'scale'}
+📅 Fecha creación: 2026-06-30 17:23:29
+🏆 Mejor modelo: RandomForest
+⚙️  Mejores parámetros: {'clf__max_depth': None, 'clf__min_samples_split': 2, 'clf__n_estimators': 300}
 
 📊 Rendimiento:
   - Accuracy (CV): 100.00%
   - Accuracy (Test): 100.00%
 
 📋 Dataset:
-  - Total muestras: 7800
-  - Gestos únicos: 26
+  - Total muestras: 8400
+  - Gestos únicos: 28
   - Características: 65
-  - Clases: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
+  - Clases: ['a', 'b', 'borrar', 'c', 'd', 'e', 'espacio', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
   - Muestras eliminadas: 1
 📈 Distribución por gesto:
   - a: 300 muestras
@@ -43,6 +43,8 @@ INFORMACIÓN DEL MODELO DE GESTOS
   - x: 300 muestras
   - y: 300 muestras
   - z: 300 muestras
+  - espacio: 300 muestras
+  - borrar: 300 muestras
 
 ==================================================
 ESTRUCTURA DE ARCHIVOS

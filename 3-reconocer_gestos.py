@@ -22,13 +22,20 @@ hands = mp_hands.Hands(
 cap = cv2.VideoCapture(0)
 
 # ── Parámetros ────────────────────────────────────────────────────────────────
-UMBRAL = 0.75           # confianza mínima
+UMBRAL = 0.6            # confianza mínima por cuadro
 BUFFER_SIZE = 12        # frames para votación por mayoría (suavizado temporal)
+MIN_BUFFER = 4          # cuadros válidos mínimos antes de intentar votar
+CONFIANZA_CONFIRMAR = 0.55  # % de acuerdo en el buffer para confirmar el gesto
 HISTORIAL_MAX = 5       # gestos recientes mostrados
+PANEL_FRASE_ALTURA = 50  # alto de la barra inferior con la frase
+
+GESTO_ESPACIO = "espacio"
+GESTO_BORRAR = "borrar"
 
 buffers_prediccion = {}  # un buffer por mano detectada
 historial_gestos = deque(maxlen=HISTORIAL_MAX)
-ultimo_gesto = ""
+ultimo_gesto_por_mano = {}  # último gesto confirmado por cada mano (evita repetir mientras se sostiene)
+frase = ""
 
 fps_contador = 0
 fps_valor = 0.0
@@ -77,9 +84,9 @@ def dibujar_panel_gesto(frame, gesto, confianza, x_off=20, y_off=20):
 
 
 def dibujar_historial(frame, historial):
-    """Muestra los últimos gestos detectados en la esquina inferior."""
+    """Muestra los últimos gestos detectados encima de la barra de la frase."""
     h, w = frame.shape[:2]
-    y_base = h - 20
+    y_base = h - PANEL_FRASE_ALTURA - 16
     cv2.putText(frame, "Historial:", (10, y_base - len(historial) * 20 - 4),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.42, (140, 140, 140), 1, cv2.LINE_AA)
     for i, g in enumerate(reversed(historial)):
@@ -87,6 +94,19 @@ def dibujar_historial(frame, historial):
         color = tuple(int(c * alpha) for c in (160, 210, 255))
         cv2.putText(frame, g, (10, y_base - i * 20),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1, cv2.LINE_AA)
+
+
+def dibujar_panel_frase(frame, frase):
+    """Barra inferior con la frase que se va armando letra por letra."""
+    h, w = frame.shape[:2]
+    y0 = h - PANEL_FRASE_ALTURA
+    overlay = frame.copy()
+    cv2.rectangle(overlay, (0, y0), (w, h), (20, 20, 20), -1)
+    frame[:] = cv2.addWeighted(overlay, 0.65, frame, 0.35, 0)
+
+    texto = f"Frase: {frase}_"
+    cv2.putText(frame, texto, (16, y0 + 34),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2, cv2.LINE_AA)
 
 
 # ── Bucle principal ───────────────────────────────────────────────────────────
@@ -128,22 +148,39 @@ while True:
             if confianza_frame > UMBRAL:
                 buffers_prediccion[key].append(clases[idx])
 
+            # Lectura cruda por cuadro (para diagnóstico), junto a la muñeca
+            muneca = hand.landmark[0]
+            x_px = int(muneca.x * frame.shape[1])
+            y_px = int(muneca.y * frame.shape[0])
+            cv2.putText(frame, f"{clases[idx]} {confianza_frame*100:.0f}%",
+                        (x_px, y_px + 30), cv2.FONT_HERSHEY_SIMPLEX,
+                        0.5, (0, 255, 255), 1, cv2.LINE_AA)
+
             # ── Votación por mayoría (suavizado temporal) ──────────────────
-            if len(buffers_prediccion[key]) >= BUFFER_SIZE // 2:
+            if len(buffers_prediccion[key]) >= MIN_BUFFER:
                 votos = Counter(buffers_prediccion[key])
                 gesto_final, votos_ganador = votos.most_common(1)[0]
                 confianza_suavizada = votos_ganador / len(buffers_prediccion[key])
 
-                if confianza_suavizada >= 0.6:
+                if confianza_suavizada >= CONFIANZA_CONFIRMAR:
                     y_panel = 20 + i * 110
                     dibujar_panel_gesto(frame, f"{handedness}: {gesto_final}",
                                         confianza_suavizada, y_off=y_panel)
 
-                    # Añadir al historial cuando cambia el gesto
-                    etiqueta = f"{handedness[0]}: {gesto_final}"
-                    if etiqueta != ultimo_gesto:
+                    # Confirmar el gesto solo si es nuevo para esta mano
+                    # (cambia de letra, o se soltó y volvió a mostrar la misma)
+                    if gesto_final != ultimo_gesto_por_mano.get(key):
+                        ultimo_gesto_por_mano[key] = gesto_final
+
+                        etiqueta = f"{handedness[0]}: {gesto_final}"
                         historial_gestos.append(etiqueta)
-                        ultimo_gesto = etiqueta
+
+                        if gesto_final == GESTO_ESPACIO:
+                            frase += " "
+                        elif gesto_final == GESTO_BORRAR:
+                            frase = frase[:-1]
+                        else:
+                            frase += gesto_final
 
             # Dibujar mano
             mp_drawing.draw_landmarks(
@@ -153,19 +190,26 @@ while True:
             )
 
     else:
-        # Sin manos → limpiar buffers
+        # Sin manos → limpiar buffers y permitir reconfirmar el mismo gesto
         buffers_prediccion.clear()
+        ultimo_gesto_por_mano.clear()
 
     dibujar_historial(frame, historial_gestos)
+    dibujar_panel_frase(frame, frase)
 
-    cv2.putText(frame, "ESC para salir",
-                (frame.shape[1] - 150, frame.shape[0] - 12),
+    cv2.putText(frame, "ESC: salir | SUPR: borrar | ESPACIO: espacio",
+                (frame.shape[1] - 340, 50),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.45, (140, 140, 140), 1, cv2.LINE_AA)
 
     cv2.imshow("Reconocimiento de gestos", frame)
 
-    if cv2.waitKey(1) & 0xFF == 27:
+    tecla = cv2.waitKey(1) & 0xFF
+    if tecla == 27:        # ESC
         break
+    elif tecla == 8:        # BACKSPACE (respaldo de teclado)
+        frase = frase[:-1]
+    elif tecla == 32:        # SPACE (respaldo de teclado)
+        frase += " "
 
 cap.release()
 cv2.destroyAllWindows()
