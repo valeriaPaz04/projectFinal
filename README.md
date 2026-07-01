@@ -42,12 +42,12 @@ La **Clínica San Rafael** (institución ficticia) atiende a diario pacientes co
 
 - ✅ Captura de dataset propio de gestos (`1-capturar_gestos.py`), entrenamiento del clasificador (`2-entrenar_modelo.py`) y reconocimiento en tiempo real (`3-reconocer_gestos.py`) funcionando localmente como aplicación de escritorio (OpenCV).
 - ✅ Aplicación web (`app.py`) construida con **Streamlit** y **streamlit-webrtc**, que reutiliza la misma lógica de reconocimiento y captura la cámara directamente desde el navegador. Probada localmente.
-- 🔄 **Pendiente:** despliegue en **Hugging Face Spaces**.
+- ✅ Desplegada en **Hugging Face Spaces**, con sincronización automática desde este repositorio mediante GitHub Actions (`.github/workflows/sync-to-hf.yml`) en cada push a `main`.
 - ⚠️ Limitación conocida: las letras **F** y **Z** tienen una tasa de reconocimiento más baja que el resto del alfabeto (uso poco frecuente, pendiente de mejora con más datos de entrenamiento).
 
 ## Enlace a la aplicación desplegada
 
-🔗 _Pendiente — se agregará aquí una vez completado el despliegue en Hugging Face Spaces._
+🔗 https://huggingface.co/spaces/valeriaPaz04/sistemaSalud
 
 ## Instalación y ejecución local (versión actual)
 
