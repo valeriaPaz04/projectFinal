@@ -7,7 +7,32 @@ import joblib
 import mediapipe as mp
 import numpy as np
 import streamlit as st
-from streamlit_webrtc import VideoProcessorBase, WebRtcMode, webrtc_streamer
+from streamlit_webrtc import RTCConfiguration, VideoProcessorBase, WebRtcMode, webrtc_streamer
+
+# Servidor TURN público (necesario para que WebRTC conecte cuando la app corre
+# en un contenedor remoto como Hugging Face Spaces; solo STUN no basta detrás de NAT).
+RTC_CONFIGURATION = RTCConfiguration(
+    {
+        "iceServers": [
+            {"urls": ["stun:stun.l.google.com:19302"]},
+            {
+                "urls": ["turn:openrelay.metered.ca:80"],
+                "username": "openrelayproject",
+                "credential": "openrelayproject",
+            },
+            {
+                "urls": ["turn:openrelay.metered.ca:443"],
+                "username": "openrelayproject",
+                "credential": "openrelayproject",
+            },
+            {
+                "urls": ["turn:openrelay.metered.ca:443?transport=tcp"],
+                "username": "openrelayproject",
+                "credential": "openrelayproject",
+            },
+        ]
+    }
+)
 
 # ── Configuración de página ────────────────────────────────────────────────────
 st.set_page_config(page_title="SeñaSalud", page_icon="🖐️", layout="wide")
@@ -202,6 +227,7 @@ with col_video:
     ctx = webrtc_streamer(
         key="senasalud",
         mode=WebRtcMode.SENDRECV,
+        rtc_configuration=RTC_CONFIGURATION,
         video_processor_factory=ProcesadorGestos,
         media_stream_constraints={"video": True, "audio": False},
         async_processing=True,
