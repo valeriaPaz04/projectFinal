@@ -16,13 +16,10 @@ TURN_CREDENTIAL = "Gqr7htHiCx/iihYo"
 
 RTC_CONFIGURATION = RTCConfiguration(
     {
+        # Forzar solo TURN (relay): el contenedor de Hugging Face bloquea/corta
+        # los intentos de UDP directo (STUN), pero TURN por TCP/443 sí pasa.
+        "iceTransportPolicy": "relay",
         "iceServers": [
-            {"urls": "stun:stun.relay.metered.ca:80"},
-            {
-                "urls": "turn:global.relay.metered.ca:80",
-                "username": TURN_USERNAME,
-                "credential": TURN_CREDENTIAL,
-            },
             {
                 "urls": "turn:global.relay.metered.ca:80?transport=tcp",
                 "username": TURN_USERNAME,
